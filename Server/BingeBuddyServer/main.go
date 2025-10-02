@@ -4,9 +4,10 @@ import (
 	"fmt"
 
 	"github.com/gin-gonic/gin"
+	controller "github.com/joe-nguhi/Binge-Buddy/Server/BingeBuddyServer/controllers"
 )
 
-const port = ":8080"
+const port = ":8010"
 
 func main() {
 
@@ -15,6 +16,8 @@ func main() {
 	r.GET("/", func(c *gin.Context) {
 		c.String(200, "Hello Binge Buddy, 👏")
 	})
+
+	r.GET("/movies", controller.GetMovies())
 
 	err := r.Run(port)
 
