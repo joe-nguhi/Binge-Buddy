@@ -18,6 +18,7 @@ func main() {
 	})
 
 	r.GET("/movies", controller.GetMovies())
+	r.GET("/movie/:imdb_id", controller.GetMovie())
 
 	err := r.Run(port)
 

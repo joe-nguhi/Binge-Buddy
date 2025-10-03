@@ -45,3 +45,37 @@ func GetMovies() gin.HandlerFunc {
 		})
 	}
 }
+
+func GetMovie() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+
+		movieID := c.Param("imdb_id")
+
+		if movieID == "" {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error": "Invalid ID",
+			})
+			return
+		}
+
+		var movie models.Movie
+
+		result := movieCollection.FindOne(ctx, bson.M{"imdb_id": movieID})
+
+		if err := result.Decode(&movie); err != nil {
+			fmt.Fprintf(os.Stderr, "Error Decoding Movie: %v\n", err)
+
+			c.JSON(http.StatusNotFound, gin.H{
+				"error": "Movie not found",
+			})
+
+			return
+		}
+
+		c.JSON(200, gin.H{
+			"movie": movie,
+		})
+	}
+}
