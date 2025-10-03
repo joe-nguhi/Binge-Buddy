@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"os"
@@ -11,6 +12,7 @@ import (
 	"github.com/joe-nguhi/Binge-Buddy/Server/BingeBuddyServer/database"
 	"github.com/joe-nguhi/Binge-Buddy/Server/BingeBuddyServer/models"
 	"go.mongodb.org/mongo-driver/v2/bson"
+	"go.mongodb.org/mongo-driver/v2/mongo"
 )
 
 var movieCollection = database.OpenCollection("movies")
@@ -65,10 +67,18 @@ func GetMovie() gin.HandlerFunc {
 		result := movieCollection.FindOne(ctx, bson.M{"imdb_id": movieID})
 
 		if err := result.Decode(&movie); err != nil {
+
+			if errors.Is(err, mongo.ErrNoDocuments) {
+				c.JSON(http.StatusNotFound, gin.H{
+					"error": "Movie not found",
+				})
+				return
+			}
+
 			fmt.Fprintf(os.Stderr, "Error Decoding Movie: %v\n", err)
 
-			c.JSON(http.StatusNotFound, gin.H{
-				"error": "Movie not found",
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error": "Error fetching movie",
 			})
 
 			return
