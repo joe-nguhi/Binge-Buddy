@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
 	"github.com/joe-nguhi/Binge-Buddy/Server/BingeBuddyServer/database"
 	"github.com/joe-nguhi/Binge-Buddy/Server/BingeBuddyServer/models"
 	"go.mongodb.org/mongo-driver/v2/bson"
@@ -16,6 +17,7 @@ import (
 )
 
 var movieCollection = database.OpenCollection("movies")
+var validate = validator.New(validator.WithRequiredStructEnabled())
 
 func GetMovies() gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -88,4 +90,36 @@ func GetMovie() gin.HandlerFunc {
 			"movie": movie,
 		})
 	}
+}
+
+func AddMovie() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+
+		var movie models.Movie
+
+		if err := c.ShouldBindJSON(&movie); err != nil {
+			fmt.Printf("Invalid Data: %v\n", err)
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid Data"})
+			return
+		}
+
+		if err := validate.Struct(movie); err != nil {
+			fmt.Printf("Invalid Data: %v\n", err)
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid Data", "details": err.Error()})
+			return
+		}
+
+		result, err := movieCollection.InsertOne(ctx, movie)
+
+		if err != nil {
+			fmt.Printf("Error inserting movie: %v\n", err)
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to add movie"})
+			return
+		}
+
+		c.JSON(http.StatusCreated, gin.H{"message": "Movie added successfully", "inserted_id": result.InsertedID})
+	}
+
 }
