@@ -20,6 +20,7 @@ func main() {
 	r.GET("/movies", controller.GetMovies())
 	r.GET("/movie/:imdb_id", controller.GetMovie())
 	r.POST("/movie/add", controller.AddMovie())
+	r.POST("/register", controller.RegisterUser())
 
 	err := r.Run(port)
 
