@@ -23,10 +23,12 @@ func RegisterUser() gin.HandlerFunc {
 
 		if err := c.ShouldBindJSON(&user); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid Data"})
+			return
 		}
 
 		if err := validate.Struct(user); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid Data", "details": err.Error()})
+			return
 		}
 
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -36,15 +38,18 @@ func RegisterUser() gin.HandlerFunc {
 
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Oops! Something went wrong. Try again later"})
+			return
 		}
 
 		if count > 0 {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "An Account by this Email already exists!"})
+			return
 		}
 
 		user.Password, err = hashPassword(user.Password)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Oops! Something went wrong. Try again later"})
+			return
 		}
 
 		user.CreatedAt = time.Now()
@@ -54,6 +59,7 @@ func RegisterUser() gin.HandlerFunc {
 
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Oops! Something went wrong. Try again later"})
+			return
 		}
 
 		c.JSON(http.StatusCreated, gin.H{"message": "User Registered Successfully", "id": result.InsertedID})
