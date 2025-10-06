@@ -42,7 +42,7 @@ func GenerateUserTokens(userID string) (string, string, error) {
 		return "", "", err
 	}
 
-	userData := signingData{
+	signData := signingData{
 		user.UserID,
 		user.Email,
 		user.FirstName,
@@ -50,8 +50,8 @@ func GenerateUserTokens(userID string) (string, string, error) {
 		user.Role,
 	}
 
-	authToken, err := generateAuthToken(userData)
-	refreshToken, err := generateRefreshToken(userData)
+	authToken, err := generateToken(signData, "JWT_KEY", time.Hour*24)
+	refreshToken, err := generateToken(signData, "JWT_REFRESH_KEY", time.Hour*24*7)
 
 	if err != nil {
 		return "", "", err
@@ -60,8 +60,8 @@ func GenerateUserTokens(userID string) (string, string, error) {
 	return authToken, refreshToken, err
 }
 
-func generateAuthToken(data signingData) (string, error) {
-	signingKey := []byte(os.Getenv("JWT_KEY"))
+func generateToken(data signingData, keyEnvVar string, expiration time.Duration) (string, error) {
+	signingKey := []byte(os.Getenv(keyEnvVar))
 	claim := signedData{
 		data.UserID,
 		data.Email,
@@ -69,29 +69,7 @@ func generateAuthToken(data signingData) (string, error) {
 		data.LastName,
 		data.Role,
 		jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 24)),
-			IssuedAt:  jwt.NewNumericDate(time.Now()),
-			Issuer:    "Binge Buddy",
-			Subject:   data.UserID,
-		},
-	}
-
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claim)
-	ss, err := token.SignedString(signingKey)
-
-	return ss, err
-}
-
-func generateRefreshToken(data signingData) (string, error) {
-	signingKey := []byte(os.Getenv("JWT_REFRESH_KEY"))
-	claim := signedData{
-		data.UserID,
-		data.Email,
-		data.FirstName,
-		data.LastName,
-		data.Role,
-		jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 24 * 7)),
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(expiration)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
 			Issuer:    "Binge Buddy",
 			Subject:   data.UserID,
