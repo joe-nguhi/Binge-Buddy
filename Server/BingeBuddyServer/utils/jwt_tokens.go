@@ -2,6 +2,7 @@ package utils
 
 import (
 	"context"
+	"errors"
 	"os"
 	"time"
 
@@ -21,7 +22,7 @@ type signingData struct {
 	Role      string
 }
 
-type signedData struct {
+type SignedData struct {
 	UserID    string
 	Email     string
 	FirstName string
@@ -62,7 +63,7 @@ func GenerateUserTokens(userID string) (string, string, error) {
 
 func generateToken(data signingData, keyEnvVar string, expiration time.Duration) (string, error) {
 	signingKey := []byte(os.Getenv(keyEnvVar))
-	claim := signedData{
+	claim := SignedData{
 		data.UserID,
 		data.Email,
 		data.FirstName,
@@ -92,4 +93,29 @@ func UpdateUserTokens(userID, authToken, refreshToken string) error {
 		bson.M{"$set": bson.M{"token": authToken, "refresh_token": refreshToken, "updated_at": time.Now()}})
 
 	return err
+}
+
+func ValidateToken(signedToken string) (claims *SignedData, err error) {
+
+	keyFunc := func(token *jwt.Token) (interface{}, error) {
+		return []byte(os.Getenv("JWT_KEY")), nil
+	}
+	claims = &SignedData{}
+
+	token, err := jwt.ParseWithClaims(signedToken, claims, keyFunc)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+		return nil, errors.New("signing method invalid")
+	}
+
+	if claims.ExpiresAt.Before(time.Now()) {
+		return nil, errors.New("token expired")
+	}
+
+	return claims, nil
+
 }

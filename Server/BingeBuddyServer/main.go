@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/gin-gonic/gin"
-	controller "github.com/joe-nguhi/Binge-Buddy/Server/BingeBuddyServer/controllers"
+	"github.com/joe-nguhi/Binge-Buddy/Server/BingeBuddyServer/routes"
 )
 
 const port = ":8010"
@@ -17,11 +17,7 @@ func main() {
 		c.String(200, "Hello Binge Buddy, 👏")
 	})
 
-	r.GET("/movies", controller.GetMovies())
-	r.GET("/movie/:imdb_id", controller.GetMovie())
-	r.POST("/movie/add", controller.AddMovie())
-	r.POST("/register", controller.RegisterUser())
-	r.POST("/login", controller.LoginUser())
+	routes.SetupRoutes(r)
 
 	err := r.Run(port)
 
