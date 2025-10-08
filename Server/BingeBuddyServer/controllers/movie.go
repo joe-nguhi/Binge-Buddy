@@ -152,7 +152,7 @@ func UpdateAdminReview() gin.HandlerFunc {
 		}
 
 		// Simulate Get Ranking from AI
-		rankingName, rankingScore, err := GetReviewRanking(req.AdminReview)
+		rankingName, rankingScore, err := getReviewRanking(req.AdminReview)
 
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get ranking"})
@@ -217,7 +217,7 @@ func GetRankings() ([]models.Ranking, error) {
 	return rankings, nil
 }
 
-func GetReviewRanking(review string) (string, int, error) {
+func getReviewRanking(review string) (string, int, error) {
 	godotenv.Load()
 
 	rankings, err := GetRankings()
