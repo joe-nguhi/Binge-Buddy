@@ -18,7 +18,7 @@ type User struct {
 	UpdatedAt      time.Time     `bson:"updated_at" json:"updated_at"`
 	Token          string        `bson:"token" json:"token"`
 	RefreshToken   string        `bson:"refresh_token" json:"refresh_token"`
-	FavoriteGenres []Genre       `bson:"favorite_genres" json:"favorite_genres"`
+	FavoriteGenres []Genre       `bson:"favourite_genres" json:"favorite_genres"`
 }
 
 type UserLogin struct {

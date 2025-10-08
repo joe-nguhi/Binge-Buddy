@@ -4,8 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -13,14 +15,18 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/joe-nguhi/Binge-Buddy/Server/BingeBuddyServer/database"
 	"github.com/joe-nguhi/Binge-Buddy/Server/BingeBuddyServer/models"
+	"github.com/joe-nguhi/Binge-Buddy/Server/BingeBuddyServer/utils"
 	"github.com/joho/godotenv"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
+	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
 
 var movieCollection = database.OpenCollection("movies")
 var rankingCollection = database.OpenCollection("rankings")
 var validate = validator.New(validator.WithRequiredStructEnabled())
+
+const DefaultFavoriteMoviesLimit = 5
 
 func GetMovies() gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -243,4 +249,88 @@ func getReviewRanking(review string) (string, int, error) {
 
 	// TODO: Call an AI API
 	return "Excellent", 1, err
+}
+
+func GetMovieRecommendations() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userId, err := utils.GetUserIdFromContext(c)
+
+		if err != nil {
+			log.Printf("Error fetching user: %v\n", err)
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid User ID"})
+			return
+		}
+
+		favoriteGenres := getUserFavoriteGenres(userId)
+
+		var moviesLimit int64 = DefaultFavoriteMoviesLimit
+
+		if err := godotenv.Load(".env"); err != nil {
+			log.Println("Warning! unable to find .env file", err)
+		}
+
+		if limit := os.Getenv("FAVORITE_MOVIES_LIMIT"); limit != "" {
+			moviesLimit, err = strconv.ParseInt(limit, 10, 64)
+			if err != nil {
+				log.Println("Warning! unable to parse FAVORITE_MOVIES_LIMIT", err)
+			}
+		}
+
+		findOptions := options.Find()
+		findOptions.SetSort(bson.D{{"ranking.ranking_value", 1}})
+		findOptions.SetLimit(moviesLimit)
+
+		filter := bson.M{"genre.genre_name": bson.M{"$in": favoriteGenres}}
+
+		fmt.Printf("Filter: %v\n", filter)
+
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+
+		cursor, err := movieCollection.Find(ctx, filter, findOptions)
+
+		if err != nil {
+			log.Printf("Error fetching movies: %v\n", err)
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error": "Error fetching movies",
+			})
+			return
+		}
+
+		defer cursor.Close(ctx)
+
+		var movies []models.Movie
+
+		if err := cursor.All(ctx, &movies); err != nil {
+			log.Printf("Error decoding movies: %v\n", err)
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error": "Error fetching movies",
+			})
+			return
+		}
+
+		c.JSON(200, gin.H{
+			"movies": movies,
+		})
+	}
+}
+
+func getUserFavoriteGenres(userId string) []string {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	var user models.User
+	result := userCollection.FindOne(ctx, bson.M{"user_id": userId})
+	if err := result.Decode(&user); err != nil {
+		log.Printf("Error fetching user: %v\n", err)
+		return []string{}
+	}
+
+	favs := make([]string, 0, len(user.FavoriteGenres))
+
+	for _, genre := range user.FavoriteGenres {
+		favs = append(favs, genre.GenreName)
+	}
+
+	return favs
 }

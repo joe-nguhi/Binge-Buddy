@@ -14,6 +14,7 @@ func SetupRoutes(app *gin.Engine) {
 
 	app.Use(middleware.Authenticate())
 
+	app.GET("/movies/recommendations", controllers.GetMovieRecommendations())
 	app.GET("/movie/:imdb_id", controllers.GetMovie())
 	app.POST("/movie/add", controllers.AddMovie())
 	app.PATCH("/movie/update-review/:imdb_id", controllers.UpdateAdminReview())
