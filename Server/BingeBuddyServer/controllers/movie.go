@@ -36,7 +36,7 @@ func GetMovies(client *mongo.Client) gin.HandlerFunc {
 		cursor, err := movieCollection.Find(ctx, bson.M{})
 
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "Error fetching movies1: %v\n", err)
+			log.Printf("Error fetching movies1: %v\n", err)
 			c.JSON(http.StatusInternalServerError, gin.H{
 				"error": "Error fetching movies",
 			})
@@ -45,7 +45,7 @@ func GetMovies(client *mongo.Client) gin.HandlerFunc {
 		defer cursor.Close(ctx)
 
 		if err := cursor.All(ctx, &movies); err != nil {
-			fmt.Fprintf(os.Stderr, "Error fetching movies: %v\n", err)
+			log.Printf("Error fetching movies: %v\n", err)
 			c.JSON(http.StatusInternalServerError, gin.H{
 				"error": "Error fetching movies",
 			})
@@ -84,7 +84,7 @@ func GetMovie(client *mongo.Client) gin.HandlerFunc {
 				return
 			}
 
-			fmt.Fprintf(os.Stderr, "Error Decoding Movie: %v\n", err)
+			log.Printf("Error Decoding Movie: %v\n", err)
 
 			c.JSON(http.StatusInternalServerError, gin.H{
 				"error": "Error fetching movie",
