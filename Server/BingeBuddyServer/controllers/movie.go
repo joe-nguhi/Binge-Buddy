@@ -28,7 +28,7 @@ const DefaultFavoriteMoviesLimit = 5
 
 func GetMovies(client *mongo.Client) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		ctx, cancel := context.WithTimeout(c, 10*time.Second)
 		defer cancel()
 
 		var movies []models.Movie
@@ -59,7 +59,7 @@ func GetMovies(client *mongo.Client) gin.HandlerFunc {
 
 func GetMovie(client *mongo.Client) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		ctx, cancel := context.WithTimeout(c, 10*time.Second)
 		defer cancel()
 
 		movieID := c.Param("imdb_id")
@@ -101,7 +101,7 @@ func GetMovie(client *mongo.Client) gin.HandlerFunc {
 
 func AddMovie(client *mongo.Client) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		ctx, cancel := context.WithTimeout(c, 10*time.Second)
 		defer cancel()
 
 		var movie models.Movie
@@ -169,14 +169,14 @@ func UpdateAdminReview(client *mongo.Client) gin.HandlerFunc {
 		}
 
 		// Simulate Get Ranking from AI
-		rankingName, rankingScore, err := getReviewRanking(req.AdminReview, client)
+		rankingName, rankingScore, err := getReviewRanking(req.AdminReview, client, c)
 
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get ranking"})
 			return
 		}
 
-		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		ctx, cancel := context.WithTimeout(c, 10*time.Second)
 		defer cancel()
 
 		update := bson.M{
@@ -213,8 +213,8 @@ func UpdateAdminReview(client *mongo.Client) gin.HandlerFunc {
 	}
 }
 
-func GetRankings(client *mongo.Client) ([]models.Ranking, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+func GetRankings(client *mongo.Client, c context.Context) ([]models.Ranking, error) {
+	ctx, cancel := context.WithTimeout(c, 10*time.Second)
 	defer cancel()
 
 	var rankings []models.Ranking
@@ -234,10 +234,14 @@ func GetRankings(client *mongo.Client) ([]models.Ranking, error) {
 	return rankings, nil
 }
 
-func getReviewRanking(review string, client *mongo.Client) (string, int, error) {
-	godotenv.Load()
+func getReviewRanking(review string, client *mongo.Client, c context.Context) (string, int, error) {
+	err := godotenv.Load()
 
-	rankings, err := GetRankings(client)
+	if err != nil {
+		fmt.Println("Warning: unable to find .env file", err)
+	}
+
+	rankings, err := GetRankings(client, c)
 
 	if err != nil {
 		return "", 0, err
@@ -272,7 +276,7 @@ func GetMovieRecommendations(client *mongo.Client) gin.HandlerFunc {
 			return
 		}
 
-		favoriteGenres := getUserFavoriteGenres(userId, client)
+		favoriteGenres := getUserFavoriteGenres(userId, client, c)
 
 		var moviesLimit int64 = DefaultFavoriteMoviesLimit
 
@@ -295,7 +299,7 @@ func GetMovieRecommendations(client *mongo.Client) gin.HandlerFunc {
 
 		fmt.Printf("Filter: %v\n", filter)
 
-		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		ctx, cancel := context.WithTimeout(c, 10*time.Second)
 		defer cancel()
 		var movieCollection = database.OpenCollection("movies", client)
 		cursor, err := movieCollection.Find(ctx, filter, findOptions)
@@ -326,8 +330,8 @@ func GetMovieRecommendations(client *mongo.Client) gin.HandlerFunc {
 	}
 }
 
-func getUserFavoriteGenres(userId string, client *mongo.Client) []string {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+func getUserFavoriteGenres(userId string, client *mongo.Client, c context.Context) []string {
+	ctx, cancel := context.WithTimeout(c, 10*time.Second)
 	defer cancel()
 
 	var user models.User

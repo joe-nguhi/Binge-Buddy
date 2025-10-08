@@ -29,8 +29,8 @@ type SignedData struct {
 	jwt.RegisteredClaims
 }
 
-func GenerateUserTokens(userID string, userCollection *mongo.Collection) (string, string, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+func GenerateUserTokens(userID string, userCollection *mongo.Collection, c context.Context) (string, string, error) {
+	ctx, cancel := context.WithTimeout(c, 10*time.Second)
 	defer cancel()
 
 	found := userCollection.FindOne(ctx, bson.M{"user_id": userID})
@@ -81,8 +81,8 @@ func generateToken(data signingData, keyEnvVar string, expiration time.Duration)
 	return ss, err
 }
 
-func UpdateUserTokens(userID, authToken, refreshToken string, userCollection *mongo.Collection) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+func UpdateUserTokens(userID, authToken, refreshToken string, userCollection *mongo.Collection, c context.Context) error {
+	ctx, cancel := context.WithTimeout(c, 10*time.Second)
 	defer cancel()
 
 	_, err := userCollection.UpdateOne(

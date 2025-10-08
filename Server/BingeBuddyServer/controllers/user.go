@@ -30,7 +30,7 @@ func RegisterUser(client *mongo.Client) gin.HandlerFunc {
 			return
 		}
 
-		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		ctx, cancel := context.WithTimeout(c, 10*time.Second)
 		defer cancel()
 		var userCollection = database.OpenCollection("users", client)
 		count, err := userCollection.CountDocuments(ctx, bson.M{"email": user.Email})
@@ -91,7 +91,7 @@ func LoginUser(client *mongo.Client) gin.HandlerFunc {
 			return
 		}
 
-		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		ctx, cancel := context.WithTimeout(c, 10*time.Second)
 		defer cancel()
 		var userCollection = database.OpenCollection("users", client)
 		found := userCollection.FindOne(ctx, bson.M{"email": formData.Email})
@@ -108,14 +108,14 @@ func LoginUser(client *mongo.Client) gin.HandlerFunc {
 			return
 		}
 
-		authToken, refreshToken, err := utils.GenerateUserTokens(user.UserID, userCollection)
+		authToken, refreshToken, err := utils.GenerateUserTokens(user.UserID, userCollection, c)
 
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Oops! Something went wrong. Try again later"})
 			return
 		}
 
-		if err := utils.UpdateUserTokens(user.UserID, authToken, refreshToken, userCollection); err != nil {
+		if err := utils.UpdateUserTokens(user.UserID, authToken, refreshToken, userCollection, c); err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Oops! Something went wrong. Try again later"})
 			return
 		}
