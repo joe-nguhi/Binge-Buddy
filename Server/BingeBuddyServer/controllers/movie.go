@@ -135,6 +135,19 @@ func AddMovie() gin.HandlerFunc {
 
 func UpdateAdminReview() gin.HandlerFunc {
 	return func(c *gin.Context) {
+
+		role, err := utils.GetUserRoleFromContext(c)
+		if err != nil {
+			log.Printf("Error fetching user: %v\n", err)
+			c.JSON(http.StatusBadRequest, gin.H{"error": "user role not defined"})
+			return
+		}
+
+		if role != "ADMIN" {
+			c.JSON(http.StatusForbidden, gin.H{"error": "Unauthorized"})
+			return
+		}
+
 		movieId, _ := c.Params.Get("imdb_id")
 
 		if movieId == "" {

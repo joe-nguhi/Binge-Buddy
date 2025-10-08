@@ -38,8 +38,8 @@ func Authenticate() gin.HandlerFunc {
 			return
 		}
 
-		c.Set("userID", userData.UserID)
-		c.Set("role", userData.Role)
+		c.Set(utils.USER_ID_CONTEXT_KEY, userData.UserID)
+		c.Set(utils.USER_ROLE_CONTEXT_KEY, userData.Role)
 		c.Next()
 	}
 }

@@ -6,7 +6,6 @@ import (
 	"os"
 	"time"
 
-	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/joe-nguhi/Binge-Buddy/Server/BingeBuddyServer/database"
 	"github.com/joe-nguhi/Binge-Buddy/Server/BingeBuddyServer/models"
@@ -119,14 +118,4 @@ func ValidateToken(signedToken string) (claims *SignedData, err error) {
 
 	return claims, nil
 
-}
-
-func GetUserIdFromContext(c *gin.Context) (string, error) {
-	id := c.GetString("userID")
-
-	if id == "" {
-		return "", errors.New("user ID not found")
-	}
-
-	return id, nil
 }
