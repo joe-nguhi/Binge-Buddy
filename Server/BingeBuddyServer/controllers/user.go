@@ -11,13 +11,11 @@ import (
 	"github.com/joe-nguhi/Binge-Buddy/Server/BingeBuddyServer/models"
 	"github.com/joe-nguhi/Binge-Buddy/Server/BingeBuddyServer/utils"
 	"go.mongodb.org/mongo-driver/v2/bson"
+	"go.mongodb.org/mongo-driver/v2/mongo"
 	"golang.org/x/crypto/bcrypt"
 )
 
-// TODO: Move client init to main and pass it to controllers
-var userCollection = database.OpenCollection("users")
-
-func RegisterUser() gin.HandlerFunc {
+func RegisterUser(client *mongo.Client) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
 		var user models.User
@@ -34,7 +32,7 @@ func RegisterUser() gin.HandlerFunc {
 
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
-
+		var userCollection = database.OpenCollection("users", client)
 		count, err := userCollection.CountDocuments(ctx, bson.M{"email": user.Email})
 
 		if err != nil {
@@ -77,7 +75,7 @@ func hashPassword(password string) (string, error) {
 	return string(hash), nil
 }
 
-func LoginUser() gin.HandlerFunc {
+func LoginUser(client *mongo.Client) gin.HandlerFunc {
 	return func(c *gin.Context) {
 
 		var formData models.UserLogin
@@ -95,7 +93,7 @@ func LoginUser() gin.HandlerFunc {
 
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
-
+		var userCollection = database.OpenCollection("users", client)
 		found := userCollection.FindOne(ctx, bson.M{"email": formData.Email})
 
 		var user models.User
@@ -110,14 +108,14 @@ func LoginUser() gin.HandlerFunc {
 			return
 		}
 
-		authToken, refreshToken, err := utils.GenerateUserTokens(user.UserID)
+		authToken, refreshToken, err := utils.GenerateUserTokens(user.UserID, userCollection)
 
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Oops! Something went wrong. Try again later"})
 			return
 		}
 
-		if err := utils.UpdateUserTokens(user.UserID, authToken, refreshToken); err != nil {
+		if err := utils.UpdateUserTokens(user.UserID, authToken, refreshToken, userCollection); err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Oops! Something went wrong. Try again later"})
 			return
 		}

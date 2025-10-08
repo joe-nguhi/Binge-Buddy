@@ -4,22 +4,26 @@ import (
 	"fmt"
 
 	"github.com/gin-gonic/gin"
+	"github.com/joe-nguhi/Binge-Buddy/Server/BingeBuddyServer/database"
 	"github.com/joe-nguhi/Binge-Buddy/Server/BingeBuddyServer/routes"
+	"go.mongodb.org/mongo-driver/v2/mongo"
 )
 
 const port = ":8010"
 
 func main() {
 
-	r := gin.Default()
+	router := gin.Default()
 
-	r.GET("/", func(c *gin.Context) {
+	router.GET("/", func(c *gin.Context) {
 		c.String(200, "Hello Binge Buddy, 👏")
 	})
 
-	routes.SetupRoutes(r)
+	var client *mongo.Client = database.Connection()
 
-	err := r.Run(port)
+	routes.SetupRoutes(router, client)
+
+	err := router.Run(port)
 
 	if err != nil {
 		fmt.Println("Failed to start Server", err)

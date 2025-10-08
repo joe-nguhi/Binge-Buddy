@@ -7,12 +7,10 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/joe-nguhi/Binge-Buddy/Server/BingeBuddyServer/database"
 	"github.com/joe-nguhi/Binge-Buddy/Server/BingeBuddyServer/models"
 	"go.mongodb.org/mongo-driver/v2/bson"
+	"go.mongodb.org/mongo-driver/v2/mongo"
 )
-
-var userCollection = database.OpenCollection("users")
 
 type signingData struct {
 	UserID    string
@@ -31,7 +29,7 @@ type SignedData struct {
 	jwt.RegisteredClaims
 }
 
-func GenerateUserTokens(userID string) (string, string, error) {
+func GenerateUserTokens(userID string, userCollection *mongo.Collection) (string, string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -83,7 +81,7 @@ func generateToken(data signingData, keyEnvVar string, expiration time.Duration)
 	return ss, err
 }
 
-func UpdateUserTokens(userID, authToken, refreshToken string) error {
+func UpdateUserTokens(userID, authToken, refreshToken string, userCollection *mongo.Collection) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
