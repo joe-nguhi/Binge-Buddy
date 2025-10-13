@@ -12,10 +12,11 @@ const Home = () => {
             setLoading(true);
             try {
                 const {data} = await Client.get('/movies');
-                if(data.length === 0){
+
+                if(data.movies.length === 0){
                     setMessage('There are currently no available movies')
                 }
-                setMovies(data);
+                setMovies(data.movies);
             } catch (error) {
                 setMessage(error.message);
             }
