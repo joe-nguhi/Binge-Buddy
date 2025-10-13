@@ -1,0 +1,38 @@
+import Client from '../../api/axios-config.js'
+import {useEffect, useState} from "react";
+import Movies from "../movies/Movies.jsx";
+
+const Home = () => {
+    const [movies, setMovies] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [message, setMessage] = useState("");
+
+    useEffect(() => {
+        const getMovies = async () => {
+            setLoading(true);
+            try {
+                const {data} = await Client.get('/movies');
+                if(data.length === 0){
+                    setMessage('There are currently no available movies')
+                }
+                setMovies(data);
+            } catch (error) {
+                setMessage(error.message);
+            }
+            setLoading(false);
+        };
+        getMovies()
+    }, []);
+
+  return (
+    <>
+        {loading? (
+            <p>Loading...</p>
+        ):
+            <Movies movies={movies} message={message}/>
+        }
+    </>
+  );
+};
+
+export default Home;
