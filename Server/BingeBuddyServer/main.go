@@ -4,7 +4,9 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"time"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/joe-nguhi/Binge-Buddy/Server/BingeBuddyServer/database"
 	"github.com/joe-nguhi/Binge-Buddy/Server/BingeBuddyServer/routes"
@@ -20,6 +22,16 @@ func main() {
 	router.GET("/", func(c *gin.Context) {
 		c.String(200, "Hello Binge Buddy, 👏")
 	})
+
+	config := cors.DefaultConfig()
+	// config.AllowOrigins = []string{"http://example.com", "http://example2.com"}
+	config.AllowAllOrigins = true
+	config.AllowMethods = []string{"GET", "POST", "PATCH"}
+	config.AllowHeaders = []string{"Origin", "Content-Type", "Authorization"}
+	config.ExposeHeaders = []string{"Content-Length", "Content-Type"}
+	config.MaxAge = 12 * time.Hour
+
+	router.Use(cors.New(config))
 
 	var client = database.Connection()
 
