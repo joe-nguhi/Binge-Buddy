@@ -1,6 +1,7 @@
 import Client from '../../api/axios-config.js'
 import {useEffect, useState} from "react";
 import Movies from "../movies/Movies.jsx";
+import {Spinner} from "react-bootstrap";
 
 const Home = () => {
     const [movies, setMovies] = useState([]);
@@ -28,7 +29,10 @@ const Home = () => {
   return (
     <>
         {loading? (
-            <p>Loading...</p>
+                <Spinner animation="border" role="status">
+                    <span className="visually-hidden">Loading...</span>
+                </Spinner>
+
         ):
             <Movies movies={movies} message={message}/>
         }
