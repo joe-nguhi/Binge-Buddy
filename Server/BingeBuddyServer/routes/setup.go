@@ -16,7 +16,7 @@ func SetupRoutes(app *gin.Engine, client *mongo.Client) {
 
 	app.Use(middleware.Authenticate())
 
-	app.GET("/movies/recommendations", controllers.GetMovieRecommendations(client))
+	app.GET("/movies/recommended", controllers.GetMovieRecommendations(client))
 	app.GET("/movie/:imdb_id", controllers.GetMovie(client))
 	app.POST("/movie/add", controllers.AddMovie(client))
 	app.PATCH("/movie/update-review/:imdb_id", controllers.UpdateAdminReview(client))

@@ -24,11 +24,12 @@ func main() {
 	})
 
 	config := cors.DefaultConfig()
-	// config.AllowOrigins = []string{"http://example.com", "http://example2.com"}
-	config.AllowAllOrigins = true
+	config.AllowOrigins = []string{"http://localhost:5173"}
+	//config.AllowAllOrigins = true
 	config.AllowMethods = []string{"GET", "POST", "PATCH"}
 	config.AllowHeaders = []string{"Origin", "Content-Type", "Authorization"}
 	config.ExposeHeaders = []string{"Content-Length", "Content-Type"}
+	config.AllowCredentials = true
 	config.MaxAge = 12 * time.Hour
 
 	router.Use(cors.New(config))
