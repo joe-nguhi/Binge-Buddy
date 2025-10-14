@@ -36,7 +36,7 @@ func GetMovies(client *mongo.Client) gin.HandlerFunc {
 		cursor, err := movieCollection.Find(ctx, bson.M{})
 
 		if err != nil {
-			log.Printf("Error fetching movies1: %v\n", err)
+			log.Printf("Error fetching movies: %v\n", err)
 			c.JSON(http.StatusInternalServerError, gin.H{
 				"error": "Error fetching movies",
 			})
@@ -53,6 +53,37 @@ func GetMovies(client *mongo.Client) gin.HandlerFunc {
 
 		c.JSON(200, gin.H{
 			"movies": movies,
+		})
+	}
+}
+
+func GetGenres(client *mongo.Client) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		ctx, cancel := context.WithTimeout(c, 10*time.Second)
+		defer cancel()
+
+		var genres []models.Genre
+		var movieCollection = database.OpenCollection("genres", client)
+		cursor, err := movieCollection.Find(ctx, bson.M{})
+
+		if err != nil {
+			log.Printf("Error fetching genres: %v\n", err)
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error": "Error fetching genres",
+			})
+		}
+
+		defer cursor.Close(ctx)
+
+		if err := cursor.All(ctx, &genres); err != nil {
+			log.Printf("Error fetching genres: %v\n", err)
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error": "Error fetching genres",
+			})
+		}
+
+		c.JSON(200, gin.H{
+			"genres": genres,
 		})
 	}
 }

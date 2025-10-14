@@ -10,6 +10,7 @@ import (
 func SetupRoutes(app *gin.Engine, client *mongo.Client) {
 
 	app.GET("/movies", controllers.GetMovies(client))
+	app.GET("/movies/genres", controllers.GetGenres(client))
 	app.POST("/register", controllers.RegisterUser(client))
 	app.POST("/login", controllers.LoginUser(client))
 
