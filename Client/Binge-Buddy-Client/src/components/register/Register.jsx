@@ -78,8 +78,8 @@ const Register = () => {
                 <div className="text-center mb-4">
                     <h2 className="fw-bold">Register</h2>
                     <p className="text-muted">Create an account to start streaming  your favorite movies</p>
-                    {error && <div className="alert alert-danger py-2">{error}</div>}
                 </div>
+                {error && <div className="alert alert-danger py-2">{error}</div>}
                 <Form onSubmit={handleSubmit}>
                     <Form.Group>
                         <Form.Label>First Name</Form.Label>
