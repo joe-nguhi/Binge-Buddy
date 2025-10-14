@@ -1,10 +1,12 @@
 import {Button, Container, Nav, Navbar, NavDropdown} from "react-bootstrap";
 import {NavLink, useNavigate} from "react-router";
-import {useState} from "react";
+
+import useAuth from "../../hooks/useAuth.jsx";
 
 const Header = () => {
     const navigate = useNavigate();
-    const [auth, setAuth] = useState(false);
+    const {auth, setAuth} = useAuth();
+    // const {auth} = useAuth();
     return (
         <>
             <Navbar bg="dark" variant="dark" expand="lg" fixed="top" className="shadow-sm">
@@ -14,17 +16,18 @@ const Header = () => {
                     <Navbar.Collapse id="basic-navbar-nav">
                         <Nav className="me-auto">
                             <Nav.Link as={NavLink} to="/">Home</Nav.Link>
-                            <Nav.Link as={NavLink} to="/recommended">Recommended</Nav.Link>
+                            <Nav.Link as={NavLink} to="/movies/recommended">Recommended</Nav.Link>
                         </Nav>
                         <Nav className="ms-auto align-items-center">
                             {auth ? (
                                 <>
-                            <span>
-                                Hello, {auth.username}
-                            </span>
-                                    <Button variant="outline-danger" size="sm" onClick={() => {
+                                    <span className="text-light me-2 d-block">
+                                        Hello, {auth.first_name}
+                                    </span>
+                                    <Button variant="outline-danger" size="sm" className="me-2" onClick={() => {
                                         localStorage.removeItem("token");
-                                        setAuth(false);
+                                        localStorage.removeItem("user");
+                                        setAuth();
                                         navigate("/login");
                                     }}>Logout
                                     </Button>

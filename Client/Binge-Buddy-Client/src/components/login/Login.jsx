@@ -2,8 +2,12 @@ import Client from "../../api/axios-config.js"
 import {useState} from "react";
 import {Link, useLocation, useNavigate} from "react-router";
 import {Button, Container, Form} from "react-bootstrap";
+import useAuth from "../../hooks/useAuth.jsx";
 
 const Login = () => {
+
+    const {setAuth} = useAuth();
+
     const navigate = useNavigate();
     const location = useLocation();
 
@@ -20,9 +24,10 @@ const Login = () => {
             const {data} = await Client.post('/login', {email, password});
             localStorage.setItem('token', data.user.token);
             localStorage.setItem('user', JSON.stringify(data.user));
+            setAuth(data.user);
             navigate(location.state?.from || '/', {replace: true});
         } catch (error) {
-            setError(error.response.data.message);
+            setError(error.message);
         } finally {
             setLoading(false);
         }
